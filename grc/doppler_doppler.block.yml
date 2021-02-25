@@ -31,7 +31,7 @@ parameters:
 
 outputs:
 -   domain: message
-    id: factor
+    id: dop_factor
     optional: true
 -   domain: message
     id: state

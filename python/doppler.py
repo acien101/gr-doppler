@@ -38,11 +38,14 @@ class doppler_runner(threading.Thread):
     self.server = None
 
   def run(self):
+    print("[doppler] Starting doppler factor calculation")
+    time.sleep(0.5) # TODO: Find better way to know if init is all done
     while not self.stopThread:
       doppler = self.gndlocation.doppler_factor(self.predictor.get_position())
-      if self.verbose: print("[doppler] factor %.10f" % doppler)
+      if self.verbose:
+        print("[doppler] factor %.10f" % doppler)
       self.blockclass.sendFactor(doppler)
-      time.sleep(0.5)
+      time.sleep(0.1)
 
 class doppler(gr.sync_block):
   def __init__(self, lat, long, alt, sat_id, tle_file, verbose):
@@ -57,13 +60,12 @@ class doppler(gr.sync_block):
 
     gndlocation=Location(
         "GND", latitude_deg=float(self.lat), longitude_deg=float(self.long), elevation_m=float(self.alt))
-    print(gndlocation)
     source = MultipleEtcTLESource(filename=tle_file)
     predictor = source.get_predictor(self.sat_id)
 
     self.thread = doppler_runner(self, predictor, gndlocation, verbose)
     self.thread.start()
-    self.message_port_register_out(pmt.intern("factor"))
+    self.message_port_register_out(pmt.intern("dop_factor"))
     self.message_port_register_out(pmt.intern("state"))
 
   def stop(self):
@@ -75,7 +77,7 @@ class doppler(gr.sync_block):
 
   def sendFactor(self,factor):
     p = pmt.from_float(factor)
-    self.message_port_pub(pmt.intern("factor"),pmt.cons(pmt.intern("factor"),p))
+    self.message_port_pub(pmt.intern("dop_factor"),pmt.cons(pmt.intern("dop_factor"),p))
 
   def sendState(self,state):
     if (state):
