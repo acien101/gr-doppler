@@ -9,7 +9,7 @@ class MultipleEtcTLESource(TLESource):
             data = fd.read().split("\n")
             tle_lines = [data[i:i+3] for i in range(0, len(data), 3)]
             for tle in tle_lines:
-                if tle[0] == sate_id:
+                if sate_id == tle[0].rstrip():
                     return tuple(tle[1:])
             raise LookupError("Stored satellite id not found")
     def get_sats(self):
