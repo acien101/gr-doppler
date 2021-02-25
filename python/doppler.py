@@ -24,11 +24,12 @@ from doppler.multiple_source import MultipleEtcTLESource
 from orbit_predictor.locations import Location
 
 class doppler_runner(threading.Thread):
-  def __init__(self, bc, predictor, gndlocation, verbose):
+  def __init__(self, bc, predictor, gndlocation, refresh_period, verbose):
     threading.Thread.__init__(self)
 
     self.predictor = predictor
     self.gndlocation = gndlocation
+    self.refresh_period = refresh_period
     self.verbose = verbose
     self.blockclass = bc
 
@@ -45,10 +46,10 @@ class doppler_runner(threading.Thread):
       if self.verbose:
         print("[doppler] factor %.10f" % doppler)
       self.blockclass.sendFactor(doppler)
-      time.sleep(0.1)
+      time.sleep(self.refresh_period)
 
 class doppler(gr.sync_block):
-  def __init__(self, lat, long, alt, sat_id, tle_file, verbose):
+  def __init__(self, lat, long, alt, sat_id, tle_file, refresh_period, verbose):
     gr.sync_block.__init__(self, name = "Doppler", in_sig = None, out_sig = None)
 
     # Init block variables
@@ -57,13 +58,14 @@ class doppler(gr.sync_block):
     self.alt = alt
     self.sat_id = sat_id
     self.tle_file = tle_file
+    self.refresh_period = refresh_period
 
     gndlocation=Location(
         "GND", latitude_deg=float(self.lat), longitude_deg=float(self.long), elevation_m=float(self.alt))
     source = MultipleEtcTLESource(filename=tle_file)
     predictor = source.get_predictor(self.sat_id)
 
-    self.thread = doppler_runner(self, predictor, gndlocation, verbose)
+    self.thread = doppler_runner(self, predictor, gndlocation, refresh_period, verbose)
     self.thread.start()
     self.message_port_register_out(pmt.intern("dop_factor"))
     self.message_port_register_out(pmt.intern("state"))

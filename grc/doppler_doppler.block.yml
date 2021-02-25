@@ -22,6 +22,10 @@ parameters:
 -   id: tle_file
     label: File containing TLE
     dtype: file_open
+-   id: refresh_period
+    label: Refresh deriod [s]
+    dtype: float
+    default: '0.1'
 -   id: verbose
     label: Verbose
     dtype: bool
@@ -39,7 +43,7 @@ outputs:
 
 templates:
     imports: import doppler
-    make: doppler.doppler(${gnd_lat}, ${gnd_lon}, ${gnd_alt}, ${sat_id}, ${tle_file}, ${verbose})
+    make: doppler.doppler(${gnd_lat}, ${gnd_lon}, ${gnd_alt}, ${sat_id}, ${tle_file}, ${refresh_period}, ${verbose})
 
 documentation: |-
     This block gives the doppler factor.
